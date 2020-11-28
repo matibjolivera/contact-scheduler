@@ -11,6 +11,7 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -38,9 +39,12 @@ public class MainActivity extends AppCompatActivity {
         RequestQueue requestQueue = Volley.newRequestQueue(this);
         StringRequest stringRequest = new StringRequest(Request.Method.GET, CONTACT_SCHEDULER_API_URL, response -> {
             try {
-                JSONObject json = new JSONObject(response);
-                Contact contact = new Contact(json.getString("name"), json.getString("number"), json.getString("email"));
-                saveContact(contact);
+                JSONArray jsonArray = new JSONArray(response);
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject json = jsonArray.getJSONObject(i);
+                    Contact contact = new Contact(json.getString("name"), json.getString("number"), json.getString("email"));
+                    saveContact(contact);
+                }
             } catch (JSONException e) {
                 Log.e("Error", e.getMessage());
                 e.printStackTrace();
