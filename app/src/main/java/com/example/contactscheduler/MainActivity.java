@@ -1,7 +1,10 @@
 package com.example.contactscheduler;
 
 import android.content.ContentProviderOperation;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -42,8 +45,10 @@ public class MainActivity extends AppCompatActivity {
                 JSONArray jsonArray = new JSONArray(response);
                 for (int i = 0; i < jsonArray.length(); i++) {
                     JSONObject json = jsonArray.getJSONObject(i);
-                    Contact contact = new Contact(json.getString("name"), json.getString("number"), json.getString("email"));
-                    saveContact(contact);
+                    if (!existContact(json.getString("number"))) {
+                        Contact contact = new Contact(json.getString("name"), json.getString("number"), json.getString("email"));
+                        saveContact(contact);
+                    }
                 }
             } catch (JSONException e) {
                 Log.e("Error", e.getMessage());
@@ -51,6 +56,22 @@ public class MainActivity extends AppCompatActivity {
             }
         }, error -> Log.e("Error", error.getMessage()));
         requestQueue.add(stringRequest);
+    }
+
+    private boolean existContact(String number) {
+        Uri lookupUri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(number));
+        String[] projection = {ContactsContract.PhoneLookup._ID, ContactsContract.PhoneLookup.NUMBER, ContactsContract.PhoneLookup.DISPLAY_NAME};
+        Cursor cur = this.getContentResolver().query(lookupUri, projection, null, null, null);
+        try {
+            if (cur.moveToFirst()) {
+                return true;
+            }
+        } finally {
+            if (cur != null) {
+                cur.close();
+            }
+        }
+        return false;
     }
 
     private void saveContact(Contact contact) {
