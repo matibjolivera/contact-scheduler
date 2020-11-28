@@ -1,11 +1,23 @@
 package com.example.contactscheduler;
 
 import android.content.ContentProviderOperation;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.JsonReader;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import static android.provider.ContactsContract.AUTHORITY;
 import static android.provider.ContactsContract.CommonDataKinds.Email;
@@ -20,13 +32,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        this.createContact();
+
+        try {
+            this.createContact();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
-    private void createContact() {
-        String name = "Test";
-        String number = "5491134160701";
-        String email = "matibjolivera@gmail.com";
+    private void createContact() throws JSONException {
+        JSONObject contact = this.getContact();
+        String name = contact.getString("name");
+        String number = contact.getString("number");
+        String email = contact.getString("email");
 
         ArrayList<ContentProviderOperation> ops = new ArrayList<>();
 
@@ -84,5 +102,13 @@ public class MainActivity extends AppCompatActivity {
                             StructuredName.DISPLAY_NAME,
                             displayName).build());
         }
+    }
+
+    private JSONObject getContact() throws JSONException {
+        JSONObject contact = new JSONObject();
+        contact.put("name", "Testing");
+        contact.put("number", "5491134160702");
+        contact.put("email", "matibjolivera@gmail.com");
+        return contact;
     }
 }
