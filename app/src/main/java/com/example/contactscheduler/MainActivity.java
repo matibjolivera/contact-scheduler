@@ -1,17 +1,18 @@
 package com.example.contactscheduler;
 
+import android.content.ContentProviderOperation;
 import android.os.Bundle;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
-
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 
-import android.view.View;
+import java.util.ArrayList;
 
-import android.view.Menu;
-import android.view.MenuItem;
+import static android.provider.ContactsContract.AUTHORITY;
+import static android.provider.ContactsContract.CommonDataKinds.Email;
+import static android.provider.ContactsContract.CommonDataKinds.Phone;
+import static android.provider.ContactsContract.CommonDataKinds.StructuredName;
+import static android.provider.ContactsContract.Data;
+import static android.provider.ContactsContract.RawContacts;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -19,38 +20,69 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+        this.createContact();
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
+    private void createContact() {
+        String name = "Test";
+        String number = "5491134160701";
+        String email = "matibjolivera@gmail.com";
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+        ArrayList<ContentProviderOperation> ops = new ArrayList<>();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        ops.add(ContentProviderOperation.newInsert(
+                RawContacts.CONTENT_URI)
+                .withValue(RawContacts.ACCOUNT_TYPE, null)
+                .withValue(RawContacts.ACCOUNT_NAME, null)
+                .build());
+
+        this.setName(name, ops);
+        this.setNumber(number, ops);
+        this.setEmail(email, ops);
+
+        try {
+            getContentResolver().applyBatch(AUTHORITY, ops);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+    }
 
-        return super.onOptionsItemSelected(item);
+    private void setEmail(String email, ArrayList<ContentProviderOperation> ops) {
+        if (null != email) {
+            ops.add(ContentProviderOperation.newInsert(Data.CONTENT_URI)
+                    .withValueBackReference(Data.RAW_CONTACT_ID, 0)
+                    .withValue(Data.MIMETYPE,
+                            Email.CONTENT_ITEM_TYPE)
+                    .withValue(Email.DATA, email)
+                    .withValue(Email.TYPE, Email.TYPE_WORK)
+                    .build());
+        }
+    }
+
+    private void setNumber(String mobileNumber, ArrayList<ContentProviderOperation> ops) {
+        if (null != mobileNumber) {
+            ops.add(ContentProviderOperation.
+                    newInsert(Data.CONTENT_URI)
+                    .withValueBackReference(Data.RAW_CONTACT_ID, 0)
+                    .withValue(Data.MIMETYPE,
+                            Phone.CONTENT_ITEM_TYPE)
+                    .withValue(Phone.NUMBER, mobileNumber)
+                    .withValue(Phone.TYPE,
+                            Phone.TYPE_MOBILE)
+                    .build());
+        }
+    }
+
+    private void setName(String displayName, ArrayList<ContentProviderOperation> ops) {
+        if (displayName != null) {
+            ops.add(ContentProviderOperation.newInsert(
+                    Data.CONTENT_URI)
+                    .withValueBackReference(Data.RAW_CONTACT_ID, 0)
+                    .withValue(Data.MIMETYPE,
+                            StructuredName.CONTENT_ITEM_TYPE)
+                    .withValue(
+                            StructuredName.DISPLAY_NAME,
+                            displayName).build());
+        }
     }
 }
