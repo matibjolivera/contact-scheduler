@@ -29,7 +29,7 @@ import static android.provider.ContactsContract.RawContacts;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static final String CONTACT_SCHEDULER_API_URL = "https://contact-scheduler-api.herokuapp.com/";
+    public static final String CONTACT_SCHEDULER_API_URL = "https://fp-woocommerce.herokuapp.com/orders";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,19 +42,22 @@ public class MainActivity extends AppCompatActivity {
         RequestQueue requestQueue = Volley.newRequestQueue(this);
         StringRequest stringRequest = new StringRequest(Request.Method.GET, CONTACT_SCHEDULER_API_URL, response -> {
             try {
-                JSONArray jsonArray = new JSONArray(response);
+                JSONObject jsonObj = new JSONObject(response);
+                JSONArray jsonArray = jsonObj.getJSONArray("result");
+
                 for (int i = 0; i < jsonArray.length(); i++) {
                     JSONObject json = jsonArray.getJSONObject(i);
-                    if (!existContact(json.getString("number"))) {
-                        Contact contact = new Contact(json.getString("name"), json.getString("number"), json.getString("email"));
+                    JSONObject billing = json.getJSONObject("billing");
+                    if (!existContact(billing.getString("phone"))) {
+                        Contact contact = new Contact("Footprints - " + billing.getString("first_name") + " " + billing.getString("last_name"), billing.getString("phone"), billing.getString("email"));
                         saveContact(contact);
                     }
                 }
-            } catch (JSONException e) {
+            } catch (Exception e) {
                 Log.e("Error", e.getMessage());
                 e.printStackTrace();
             }
-        }, error -> Log.e("Error", error.getMessage()));
+        }, error -> Log.e("Error", "Errorrrrrr"));
         requestQueue.add(stringRequest);
     }
 
