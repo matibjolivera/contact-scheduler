@@ -18,6 +18,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.DataOutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 
 import static android.provider.ContactsContract.AUTHORITY;
@@ -39,18 +42,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void createContact() {
+        Log.d("MORTADELA", "Create contact");
         RequestQueue requestQueue = Volley.newRequestQueue(this);
         StringRequest stringRequest = new StringRequest(Request.Method.GET, CONTACT_SCHEDULER_API_URL, response -> {
             try {
                 JSONObject jsonObj = new JSONObject(response);
                 JSONArray jsonArray = jsonObj.getJSONArray("result");
-
-                for (int i = 0; i < jsonArray.length(); i++) {
+                int limit = jsonArray.length();
+                for (int i = 0; i < limit; i++) {
                     JSONObject json = jsonArray.getJSONObject(i);
                     JSONObject billing = json.getJSONObject("billing");
                     if (!existContact(billing.getString("phone"))) {
                         Contact contact = new Contact("Footprints - " + billing.getString("first_name") + " " + billing.getString("last_name"), billing.getString("phone"), billing.getString("email"));
                         saveContact(contact);
+                        setSaved(json.getString("reference"));
                     }
                 }
             } catch (Exception e) {
@@ -59,6 +64,37 @@ public class MainActivity extends AppCompatActivity {
             }
         }, error -> Log.e("Error", "Errorrrrrr"));
         requestQueue.add(stringRequest);
+    }
+
+    private void setSaved(String reference) {
+        Thread thread = new Thread(() -> {
+            try {
+                URL url = new URL(CONTACT_SCHEDULER_API_URL + reference);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("PATCH");
+                conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                conn.setRequestProperty("Accept", "application/json");
+                conn.setDoOutput(true);
+                conn.setDoInput(true);
+
+                JSONObject jsonParam = new JSONObject();
+                jsonParam.put("saved", true);
+
+                Log.i("JSON", jsonParam.toString());
+                DataOutputStream os = new DataOutputStream(conn.getOutputStream());
+                //os.writeBytes(URLEncoder.encode(jsonParam.toString(), "UTF-8"));
+                os.writeBytes(jsonParam.toString());
+
+                os.flush();
+                os.close();
+
+                conn.disconnect();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        thread.start();
     }
 
     private boolean existContact(String number) {
