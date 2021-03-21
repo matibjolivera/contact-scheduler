@@ -15,7 +15,6 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.DataOutputStream;
@@ -38,11 +37,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        createContact();
+        processContacts();
     }
 
-    private void createContact() {
-        Log.d("MORTADELA", "Create contact");
+    private void processContacts() {
         RequestQueue requestQueue = Volley.newRequestQueue(this);
         StringRequest stringRequest = new StringRequest(Request.Method.GET, CONTACT_SCHEDULER_API_URL, response -> {
             try {
@@ -62,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.e("Error", e.getMessage());
                 e.printStackTrace();
             }
-        }, error -> Log.e("Error", "Errorrrrrr"));
+        }, error -> Log.e("Error", "Error"));
         requestQueue.add(stringRequest);
     }
 
