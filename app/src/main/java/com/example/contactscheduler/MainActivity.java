@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.HttpClientStack;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
@@ -67,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
     private void setSaved(String reference) {
         Thread thread = new Thread(() -> {
             try {
-                URL url = new URL(CONTACT_SCHEDULER_API_URL + reference);
+                URL url = new URL(CONTACT_SCHEDULER_API_URL + "/" + reference);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("PATCH");
                 conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
@@ -78,9 +79,7 @@ public class MainActivity extends AppCompatActivity {
                 JSONObject jsonParam = new JSONObject();
                 jsonParam.put("saved", true);
 
-                Log.i("JSON", jsonParam.toString());
                 DataOutputStream os = new DataOutputStream(conn.getOutputStream());
-                //os.writeBytes(URLEncoder.encode(jsonParam.toString(), "UTF-8"));
                 os.writeBytes(jsonParam.toString());
 
                 os.flush();
